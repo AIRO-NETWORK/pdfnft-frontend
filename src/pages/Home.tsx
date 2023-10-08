@@ -1,8 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashLink } from 'react-router-hash-link';
 import { scrollWithOffset } from 'data';
+import { ReactComponent as CloseIcon } from 'assets/img/close.svg';
 
 const HomePage = () => {
+  const [thumbnail, setThumbnail] = useState();
+  const [previewThumbnail, setPreviewThumbnail] = useState<string>();
+  const [activeCreateBtn, setActiveCreateBtn] = useState<boolean>(false);
+  const [dragActive, setDragActive] = useState<boolean>(false);
+  const [isValidThumbnail, setIsValidThumbnail] = useState<boolean>(false);
+
+  /* handle file input */
+  const inputRef: any = React.useRef(null);
+
+  function handleFile(files: any) {
+    setThumbnail(files[0]);
+  }
+
+  // handle drag events
+  const handleDrag = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  // triggers when file is dropped
+  const handleDrop = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files);
+    }
+  };
+
+  // triggers when file is selected with click
+  const handleChange = (e: any) => {
+    e.preventDefault();
+    let isValid = false;
+    if (e.target.files && e.target.files[0]) {
+      isValid = true;
+      setIsValidThumbnail(isValid);
+      handleFile(e.target.files);
+    }
+  };
+
+  // triggers the input when the file input div is clicked
+  const onFileInputDivClick = () => {
+    inputRef.current.click();
+  };
+  /* ----------------- */
+
+  useEffect(() => {
+    if (!thumbnail) {
+      setPreviewThumbnail(undefined);
+      setIsValidThumbnail(false);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(thumbnail);
+    setPreviewThumbnail(objectUrl);
+    setIsValidThumbnail(true);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [thumbnail]);
+
   return (
     <div className='flex flex-col justify-center items-center w-full text-white'>
       <div
@@ -58,8 +124,185 @@ const HomePage = () => {
         </div>
       </div>
 
+      {/* Mint the data NFT */}
+      <div id='mint' className='flex justify-center items-center gap-[20px] w-full max-w-[848px] px-[20px] mt-[60px] md:mt-[180px]'>
+        <div className='relative w-full p-[24px] rounded-[21px] bg-[linear-gradient(132deg,rgba(126,126,126,0.40)_3.01%,rgba(126,126,126,0.00)_107.67%)] backdrop-blur-[4.5px] overflow-hidden'>
+          <div className='absolute left-0 flex justify-center w-full top-[-216px]'>
+            <div className='w-[720px] h-[240px] bg-[#CAFC01] opacity-[0.64] blur-[48px]'></div>
+          </div>
+
+          {/* Title */}
+          <div className='w-full'>
+            <h3 className='text-[24px] font-semibold leading-[36px]'>Mint new NFT</h3>
+          </div>
+
+          {/* Token metadata */}
+          <div className='w-full mt-[24px]'>
+            <h4 className='text-[16px] font-inter font-semibold leading-[24px]'>
+              Token Metadata
+            </h4>
+
+            <div className='flex justify-center items-center gap-[20px] w-full mt-[16px]'>
+              {/* token name */}
+              <div className='w-1/2'>
+                <h6 className='text-[12px] font-inter font-medium leading-[16px]'>Enter token name</h6>
+
+                <input
+                  className='w-full rounded-[8px] bg-[#19191A] p-[12px] text-[16px] font-inter font-normal leading-[24px] mt-[12px] grey-placeholder border-none shadow-none focus:shadow-none outline-none'
+                  placeholder='Token name'
+                />
+                <h6 className='text-[11px] text-[#77777D] font-inter font-medium leading-[16px] ml-[12px] mt-[8px]'>Between 3 and 20 alphanumeric characters only</h6>
+              </div>
+
+              {/* dataset title */}
+              <div className='w-1/2'>
+                <h6 className='text-[12px] font-inter font-medium leading-[16px]'>Enter dataset title</h6>
+
+                <input
+                  className='w-full rounded-[8px] bg-[#19191A] p-[12px] text-[16px] font-inter font-normal leading-[24px] mt-[12px] grey-placeholder border-none shadow-none focus:shadow-none outline-none'
+                  placeholder='Dataset title'
+                />
+                <h6 className='text-[11px] text-[#77777D] font-inter font-medium leading-[16px] ml-[12px] mt-[8px]'>Between 10 and 60 alphanumeric characters only</h6>
+              </div>
+            </div>
+
+            {/* dataset description */}
+            <div className='w-full mt-[16px]'>
+              <h6 className='text-[12px] font-inter font-medium leading-[16px]'>Enter dataset description</h6>
+
+              <textarea
+                rows={5}
+                className='w-full rounded-[8px] bg-[#19191A] p-[12px] text-[16px] font-inter font-normal leading-[24px] mt-[12px] grey-placeholder border-none shadow-none focus:shadow-none outline-none'
+                placeholder='Dataset description'
+              />
+              <h6 className='text-[11px] text-[#77777D] font-inter font-medium leading-[16px] ml-[12px] mt-[8px]'>Between 10 and 400 characters only. URL allowed.</h6>
+            </div>
+          </div>
+
+
+          {/* Set Royalties */}
+          <div className='w-full mt-[24px]'>
+            <h4 className='text-[16px] font-inter font-semibold leading-[24px]'>
+              Royalties
+            </h4>
+
+            <h6 className='text-[12px] font-inter font-medium leading-[16px] mt-[16px]'>
+              Set royalties in sale
+            </h6>
+
+            <div className='flex items-center gap-[16px] mt-[12px]'>
+              <input
+                type='number'
+                className='bg-[#19191A] rounded-[8px] w-full max-w-[480px] text-[16px] font-inter font-normal leading-[24px] p-[12px] border-none shadow-none focus:shadow-none outline-none'
+                placeholder='0'
+              />
+            </div>
+          </div>
+
+          {/* PDF file */}
+          <div className='w-full mt-[32px]'>
+            <h6 className='text-[12px] font-inter font-medium leading-[16px]'>
+              PDF file
+            </h6>
+            <div className='flex items-center gap-[16px] w-full h-[160px] mt-[12px] cursor-pointer'>
+              <div
+                className='flex flex-col justify-center items-center gap-[8px] w-full h-full bg-[#020710]/20 backdrop-blur-[4.5px] border border-dashed border-[#28282A] rounded-[12px]'
+                onClick={onFileInputDivClick}
+                onDragEnter={handleDrag}
+              >
+                <input ref={inputRef} type="file" onChange={handleChange} className='hidden' />
+                <h4 className='text-[16px] font-inter font-semibold leading-[24px] px-[20px]'>
+                  <span>{'Drag & drop PDF here or '}</span>
+                  <span className='text-[#CAFC01]'>Select in files</span>
+                </h4>
+                <h6 className='w-[218px] text-[11px] text-[#676767] text-center font-inter font-normal leading-[16px]'>
+                  Supported formates: PDF.
+                </h6>
+
+                {
+                  dragActive && (
+                    <div
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                      className='absolute w-full h-full inset-0'
+                    />
+                  )
+                }
+              </div>
+            </div>
+          </div>
+
+          {/* Thumbnail */}
+          <div className='w-full mt-[32px]'>
+            <h6 className='text-[12px] font-inter font-medium leading-[16px]'>
+              Cover image
+            </h6>
+            <div className='flex items-center gap-[16px] w-full h-[160px] mt-[12px] cursor-pointer'>
+              {
+                previewThumbnail && (
+                  <div className='h-full aspect-square relative'>
+                    <div className='flex justify-end absolute w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-300 p-[10px]'>
+                      <button
+                        className='flex justify-center items-center w-[20px] h-[20px] rounded-full hover:bg-[#19191A]/60'
+                        onClick={() => {
+                          setThumbnail(undefined);
+                          setPreviewThumbnail(undefined);
+                          setActiveCreateBtn(false);
+                        }}
+                      >
+                        <CloseIcon />
+                      </button>
+                    </div>
+                    <img src={previewThumbnail} alt='preview' className='w-full aspect-square rounded-[12px]' />
+                  </div>
+                )
+              }
+
+              <div
+                className='flex flex-col justify-center items-center gap-[8px] w-full h-full bg-[#020710]/20 backdrop-blur-[4.5px] border border-dashed border-[#28282A] rounded-[12px]'
+                onClick={onFileInputDivClick}
+                onDragEnter={handleDrag}
+              >
+                <input ref={inputRef} type="file" onChange={handleChange} className='hidden' />
+                <h4 className='text-[16px] font-inter font-semibold leading-[24px] px-[20px]'>
+                  <span>{'Drag & drop image here or '}</span>
+                  <span className='text-[#CAFC01]'>Select in files</span>
+                </h4>
+                <h6 className='w-[218px] text-[11px] text-[#676767] text-center font-inter font-normal leading-[16px]'>
+                  Supported formates: JPEG, JPG and PNG. Recommended 640x640 image.
+                </h6>
+
+                {
+                  dragActive && (
+                    <div
+                      onDragEnter={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDragOver={handleDrag}
+                      onDrop={handleDrop}
+                      className='absolute w-full h-full inset-0'
+                    />
+                  )
+                }
+              </div>
+            </div>
+          </div>
+
+          <hr className='my-[24px] border-[#28282A]' />
+
+          <div className='flex justify-end items-center w-full mt-[24px]'>
+            <button
+              className='text-[14px] md:text-[15px] text-[#0C0C0C] font-zendots font-semibold bg-[#CAFC01] shadow-[0px_4px_14px_0px_rgba(202,252,1,0.74)] rounded-full p-[8px_12px] md:p-[12px_22px] transition-all hover:translate-y-[-2px]'
+            >
+              Mint Your Data NFT
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* What is PDFNFT.com? */}
-      <div id='about' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[150px]'>
+      <div id='about' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
         <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
           What is PDFNFT.com?
         </h1>
