@@ -13,7 +13,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   }, [location.pathname]);
 
   return (
-    <div className='flex flex-col min-h-screen bg-[url("/src/assets/img/bg.png")] bg-cover bg-center'>
+    <div className='flex flex-col min-h-screen bg-[url("/src/assets/img/bg.webp")] bg-cover bg-center'>
       <Navbar />
       <main className='flex flex-col grow'>
         <AuthenticatedRoutesWrapper
