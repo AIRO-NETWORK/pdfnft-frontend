@@ -21,7 +21,7 @@ const HomePage = () => {
           <div className='flelx items-center w-full h-[85px] relative'>
             <div className='absolute top-0 left-0 w-[8px] h-full !bg-[linear-gradient(0deg,#CAFC01_0%,#CAFC01_100%)]'></div>
 
-            <div className='flex items-center text-[23px] text-[#F5F2EA] opacity-60 pl-[50px] w-[500px] h-full'>
+            <div className='flex items-center text-[23px] text-[#F5F2EA] opacity-60 pl-[50px] w-full max-w-[500px] h-full'>
               As easy as: Connect. Upload. Pay. Mint.
             </div>
           </div>
@@ -29,12 +29,12 @@ const HomePage = () => {
           <div className='flex items-center gap-[73px] mt-[20px]'>
             <div className='flex flex-col'>
               <span className='text-[16px] text-[#F5F2EA] font-bold'>Ebooks</span>
-              <div className='text-[67px] text-[#CAFC01] font-bold leading-[120%]'>1000+</div>
+              <div className='text-[36px] md:text-[67px] text-[#CAFC01] font-bold leading-[120%]'>1000+</div>
             </div>
 
             <div className='flex flex-col'>
               <span className='text-[16px] text-[#F5F2EA] font-bold'>Documents</span>
-              <div className='text-[67px] text-[#CAFC01] font-bold leading-[120%]'>10000+</div>
+              <div className='text-[36px] md:text-[67px] text-[#CAFC01] font-bold leading-[120%]'>10000+</div>
             </div>
           </div>
 
