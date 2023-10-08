@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import 'node_modules/swiper/swiper.scss';
+
+@layer utilities {
+  .font-worksans {
+    font-family: "WorkSans-VariableFont";
+  }
+
+  .font-worksans-black {
+    font-family: "WorkSans-Black";
+  }
+
+  .font-zendots {
+    font-family: "ZenDots-Regular";
+  }
+}
+
+/* Base
+-------------------------------------------------- */
+html {
+  min-height: 100%;
+  font-size: 14px;
+}
+
+.clip-path {
+  --cpl-btn__crop: 10px;
+  --cpl-crop--top-left__size: var(--cpl-btn__crop);
+  --cpl-crop--bottom-right__size: var(--cpl-btn__crop);
+  --cpl-crop--top-right__size: 0%;
+  --cpl-crop--bottom-left__size: 0%;
+  -webkit-clip-path: polygon(0 var(--cpl-crop--top-left__size), var(--cpl-crop--top-left__size) 0, calc(100% - var(--cpl-crop--top-right__size)) 0, 100% var(--cpl-crop--top-right__size), 100% calc(100% - var(--cpl-crop--bottom-right__size)), calc(100% - var(--cpl-crop--bottom-right__size)) 100%, var(--cpl-crop--bottom-left__size) 100%, 0 calc(100% - var(--cpl-crop--bottom-left__size)));
+  clip-path: polygon(0 var(--cpl-crop--top-left__size), var(--cpl-crop--top-left__size) 0, calc(100% - var(--cpl-crop--top-right__size)) 0, 100% var(--cpl-crop--top-right__size), 100% calc(100% - var(--cpl-crop--bottom-right__size)), calc(100% - var(--cpl-crop--bottom-right__size)) 100%, var(--cpl-crop--bottom-left__size) 100%, 0 calc(100% - var(--cpl-crop--bottom-left__size)));
+}
+
+.connect-wallet-title {
+  &::before {
+    content: "";
+    display: block;
+    width: 100px;
+    margin-bottom: 13px;
+    -webkit-clip-path: polygon(0 calc(100% - 1px), 2px 0, 40px 0, 42px calc(100% - 1px), 100% calc(100% - 1px), 100% 100%, 0 100%);
+    clip-path: polygon(0 calc(100% - 1px), 2px 0, 40px 0, 42px calc(100% - 1px), 100% calc(100% - 1px), 100% 100%, 0 100%);
+    border-top: 3px solid;
+  }
+}
+
+.faq-row-wrapper {
+  .faq-title {
+    h2 {
+      font-size: 40px !important;
+      font-family: "WorkSans-Black" !important;
+      // color: #181b31 !important;
+      text-align: center !important;
+      line-height: 1 !important;
+      width: 100%;
+    }
+  }
+
+  .faq-row {
+    .row-title {
+      font-weight: 600 !important;
+    }
+  }
+}
