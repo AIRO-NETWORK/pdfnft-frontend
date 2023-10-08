@@ -20,7 +20,7 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className='sticky top-0 right-0 flex justify-between items-center h-[80px] md:h-[92px]'>
+    <nav className='sticky top-0 right-0 z-30 flex justify-between items-center h-[80px] md:h-[92px] backdrop-blur-[4.5px]'>
       <div className='flex justify-center items-center w-full h-full'>
         <div className='flex justify-between items-center w-full max-w-[1280px] h-full px-[20px] md:px-[10px]'>
           <div className='h-[42px] md:h-[52px]'>

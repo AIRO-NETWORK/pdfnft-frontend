@@ -26,30 +26,30 @@ const UnlockPage = () => {
             <ExtensionLoginButton
               loginButtonText='MultiversX DeFi Wallet'
               {...commonProps}
-              className='w-full !text-[15px] !font-medium bg-[linear-gradient(180deg,#FFCA3E_0%,#FF573B_100%)] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
+              className='w-full !text-[15px] !text-[#0C0C0C] !font-medium !bg-[#CAFC01] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
             />
 
             <OperaWalletLoginButton
               loginButtonText='Opera Crypto Wallet - Beta'
               {...commonProps}
-              className='w-full !text-[15px] !font-medium bg-[linear-gradient(180deg,#FFCA3E_0%,#FF573B_100%)] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
+              className='w-full !text-[15px] !text-[#0C0C0C] !font-medium !bg-[#CAFC01] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
             />
 
             <WebWalletLoginButton
               loginButtonText='MultiversX Web Wallet'
               data-testid='webWalletLoginBtn'
               {...commonProps}
-              className='w-full !text-[15px] !font-medium bg-[linear-gradient(180deg,#FFCA3E_0%,#FF573B_100%)] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
+              className='w-full !text-[15px] !text-[#0C0C0C] !font-medium !bg-[#CAFC01] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
             />
             <LedgerLoginButton
               loginButtonText='Ledger'
-              className='test-class_name w-full !text-[15px] !font-medium bg-[linear-gradient(180deg,#FFCA3E_0%,#FF573B_100%)] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
+              className='test-class_name w-full !text-[15px] !text-[#0C0C0C] !font-medium !bg-[#CAFC01] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
               {...commonProps}
             />
             <WalletConnectLoginButton
               loginButtonText='xPortal App'
               {...commonProps}
-              className='w-full !text-[15px] !font-medium bg-[linear-gradient(180deg,#FFCA3E_0%,#FF573B_100%)] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
+              className='w-full !text-[15px] !text-[#0C0C0C] !font-medium !bg-[#CAFC01] !p-[9px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)] !border-none clip-path'
             />
           </div>
         </div>
