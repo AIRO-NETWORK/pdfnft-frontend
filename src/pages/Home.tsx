@@ -1,14 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { HashLink } from 'react-router-hash-link';
+import { useGetAccountInfo, useGetLastSignedMessageSession, useSignMessage } from 'hooks';
+import { useGetSignMessageSession } from '@multiversx/sdk-dapp/hooks/signMessage/useGetSignMessageSession';
+import { Address } from '@multiversx/sdk-core/out';
+import { SignableMessage } from '@multiversx/sdk-core';
+import { SignedMessageStatusesEnum } from 'types';
 import { scrollWithOffset } from 'data';
 import { ReactComponent as CloseIcon } from 'assets/img/close.svg';
 
 const HomePage = () => {
+  const { address } = useGetAccountInfo();
+  const { sessionId, signMessage, onAbort } = useSignMessage();
+  const signedMessageInfo = useGetLastSignedMessageSession();
+  const messageSession = useGetSignMessageSession(sessionId);
+
+  const [message, setMessage] = useState('How are you doing?');
   const [thumbnail, setThumbnail] = useState();
   const [previewThumbnail, setPreviewThumbnail] = useState<string>();
   const [activeCreateBtn, setActiveCreateBtn] = useState<boolean>(false);
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [isValidThumbnail, setIsValidThumbnail] = useState<boolean>(false);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    if (signedMessageInfo) {
+      onAbort();
+    }
+
+    if (!message.trim()) {
+      return;
+    }
+
+    const sinableMessage = await signMessage({
+      message,
+      callbackRoute: window.location.href
+    });
+
+    console.log('sinableMessage', sinableMessage);
+    const string = new TextDecoder().decode(sinableMessage?.message);
+    console.log('string', string);
+  };
+
+  useEffect(() => {
+    if (signedMessageInfo && signedMessageInfo.status == SignedMessageStatusesEnum.signed) {
+      console.log('signedMessageInfo', signedMessageInfo);
+    }
+  }, [signedMessageInfo]);
 
   /* handle file input */
   const inputRef: any = React.useRef(null);
@@ -294,6 +332,7 @@ const HomePage = () => {
           <div className='flex justify-end items-center w-full mt-[24px]'>
             <button
               className='text-[14px] md:text-[15px] text-[#0C0C0C] font-zendots font-semibold bg-[#CAFC01] shadow-[0px_4px_14px_0px_rgba(202,252,1,0.74)] rounded-full p-[8px_12px] md:p-[12px_22px] transition-all hover:translate-y-[-2px]'
+              onClick={handleSubmit}
             >
               Mint Your Data NFT
             </button>

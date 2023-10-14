@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Route, Routes, BrowserRouter as Router } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { ToastContainer } from 'react-toastify';
+import { io } from 'socket.io-client';
 import {
   AxiosInterceptorContext, // using this is optional
   DappProvider,
@@ -21,6 +24,13 @@ import { routes } from 'routes';
 import { EnvironmentsEnum } from 'types';
 
 export const App = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const userSocket = io('/user');
+    dispatch({ type: 'LOAD_USER_SOCKET', payload: userSocket });
+  }, []);
+
   return (
     <AxiosInterceptorContext.Provider>
       <AxiosInterceptorContext.Interceptor
@@ -54,6 +64,7 @@ export const App = () => {
             </Layout>
           </DappProvider>
         </Router>
+        <ToastContainer autoClose={3000} />
       </AxiosInterceptorContext.Interceptor>
     </AxiosInterceptorContext.Provider>
   );
