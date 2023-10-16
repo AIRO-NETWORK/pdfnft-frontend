@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import 'node_modules/swiper/swiper.scss';
+@import "react-toastify/dist/ReactToastify.css";
 
 @layer utilities {
   .font-worksans {
@@ -23,6 +24,18 @@
 html {
   min-height: 100%;
   font-size: 14px;
+}
+
+/* Works for Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Works for Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .clip-path {
@@ -63,5 +76,39 @@ html {
     .row-title {
       font-weight: 600 !important;
     }
+  }
+}
+
+.fund-modal-tab-item {
+  padding: 0 24px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 23px;
+  height: 50px;
+  color: #808080;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 0 0 rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  &:hover:not(.active) {
+    transform: scale(1.2);
+    transform: translateY(-2px);
+    filter: brightness(110%);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  &.active {
+    border-left: 3px solid;
+    border-image-slice: 1;
+    background-color: #1D262F;
+    color: white;
+    font-weight: bold;
+    box-shadow: inset 0 -2px 0 0 rgba(0, 0, 0, 0.2), 0 2px 0 0 rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.2);
   }
 }

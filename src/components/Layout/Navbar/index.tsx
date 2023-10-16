@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HashLink } from 'react-router-hash-link';
 import { useDispatch, useSelector } from 'react-redux';
@@ -17,9 +17,11 @@ import { navbarItems, scrollWithOffset } from 'data';
 import { CombinedReducer } from 'store';
 import { User } from 'interfaces/User';
 import { Sockets } from 'reducers/sockets';
+import FundModal from './FundModal';
 import logoImg from 'assets/img/logo.png';
+import pencilImg from 'assets/img/pencil.svg';
 
-// let flag = false;
+let flag = false;
 let isSigningMessage = false;
 const messageToSign = 'Welcome to PDFNFT.com';
 
@@ -30,6 +32,7 @@ export const Navbar = () => {
   const { signMessage, onAbort } = useSignMessage();
   const signedMessageInfo = useGetLastSignedMessageSession();
   const isLoggedIn = useGetIsLoggedIn();
+  const [showFundModal, setShowFundModal] = useState<boolean>(false);
 
   const user = useSelector<CombinedReducer, User>((state) => state.user);
   const sockets = useSelector<CombinedReducer, Sockets>((state) => state.sockets);
@@ -53,6 +56,14 @@ export const Navbar = () => {
     if (user?._id) {
       sockets.user.emit('subscribeToProfile', user._id);
     }
+
+    if (flag) return;
+    flag = true;
+
+    sockets.user.on('balanceChange', (amount: number, _fromDeposit: boolean) => {
+      console.log('updated amount', amount);
+      dispatch({ type: 'UPDATE_USER_BALANCE', payload: amount });
+    });
   }, [sockets?.user, user?._id]);
 
   useEffect(() => {
@@ -160,14 +171,14 @@ export const Navbar = () => {
   return (
     <nav className='sticky top-0 right-0 z-30 flex justify-between items-center h-[80px] md:h-[92px] backdrop-blur-[4.5px]'>
       <div className='flex justify-center items-center w-full h-full'>
-        <div className='flex justify-between items-center w-full max-w-[1280px] h-full px-[20px] md:px-[10px]'>
-          <div className='h-[42px] md:h-[52px]'>
+        <div className='flex flex-col md:flex-row justify-between items-center w-full max-w-[1280px] h-full px-[20px] md:px-[10px]'>
+          <div className='h-[28px] md:h-[52px] mt-3 md:mt-0 mb-2 md:mb-0'>
             <a href={routeNames.home}>
               <img src={logoImg} alt='logo' className='h-full' />
             </a>
           </div>
 
-          <div className='flex justify-end items-center text-white'>
+          <div className='flex justify-end items-center w-full text-white'>
             <div className='hidden xl:flex items-center gap-[10px] p-[7.5px_31px] h-[70px]'>
               {
                 navbarItems.map((item, index) => {
@@ -186,6 +197,22 @@ export const Navbar = () => {
               }
             </div>
 
+            {
+              user?.address && (
+                <div className='flex justify-center items-center h-[30px] md:h-[40px] rounded-[10px] px-[8px] md:px-[14px] gap-[6px] md:gap-[12px] border border-solid border-[#CAFC01] mr-5'>
+                  <img
+                    src={pencilImg}
+                    alt='pen-icon'
+                    className='w-[11px] md:w-[14px] cursor-pointer transform hover:scale-150 transition-all'
+                    onClick={() => setShowFundModal(true)}
+                  />
+                  <div className='text-[14px] md:text-[16px] text-white font-medium'>
+                    {user?.usdcBalance} <span className='font-bold'>USDC</span>
+                  </div>
+                </div>
+              )
+            }
+
             <button
               className='text-[14px] md:text-[15px] text-[#0C0C0C] font-zendots font-semibold bg-[#CAFC01] rounded-full p-[8px_12px] md:p-[12px_22px] transition-all hover:translate-y-[-2px] hover:shadow-[0_12px_28px_rgba(0,0,0,.12)]'
               onClick={isLoggedIn ? handleLogout : handleLogin}
@@ -201,6 +228,12 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Fund Modal */}
+      <FundModal
+        show={showFundModal}
+        handleShow={setShowFundModal}
+      />
     </nav>
   );
 };

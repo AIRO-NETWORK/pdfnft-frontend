@@ -1,6 +1,3 @@
-export const contractAddress = 'erd1qqqqqqqqqqqqqpgqlcefjy69nl44ats2xl9ej2edphvsk6qcreyqhx9ynk';
-export const adminWallet = 'erd1n573qcc2r7u5e4d5ajpvv5vdwma8m6lzdg33de0u9du6k58gr8mqzd4um4';
-
 export const dAppName = 'PDFNFT';
 
 // Generate your own WalletConnect 2 ProjectId here: https://cloud.walletconnect.com/app
@@ -14,8 +11,22 @@ export const TOOLS_API_URL = 'https://tools.multiversx.com';
  */
 export const sampleAuthenticatedDomains = [TOOLS_API_URL];
 
-export const gatewayAddress = {
+export const apiAddresses: { [k: string]: string } = {
+    'mainnet': 'https://api.multiversx.com',
+    'devnet': 'https://devnet-api.multiversx.com'
+};
+
+export const gatewayAddresses: { [k: string]: string } = {
     'mainnet': 'https://gateway.multiversx.com',
-    'testnet': 'https://elrond-testnet.public.blastapi.io',
     'devnet': 'https://devnet-gateway.multiversx.com'
+};
+
+export const explorers: { [k: string]: string } = {
+    'mainnet': 'https://explorer.multiversx.com',
+    'devnet': 'https://devnet-explorer.multiversx.com'
+};
+
+export const usdcTokenIds: { [k: string]: string } = {
+    'mainnet': 'USDC-c76f1f',
+    'devnet': 'USDC-787051'
 };
