@@ -49,7 +49,8 @@ export const uploadMetadataToIPFS = async (
     });
 
     if (metadata) {
-        return 'https://nftstorage.link/ipfs/' + metadata?.data?.image?.href?.split('//')[1];
+        const href = metadata?.data?.image?.href?.split('//')[1];
+        return `https://${href.split('/')[0]}.ipfs.nftstorage.link/${href.split('/')[1]}`;
     } else {
         return;
     }

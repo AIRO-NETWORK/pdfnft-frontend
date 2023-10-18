@@ -47,6 +47,9 @@ const HomePage = () => {
     if (file.type.toLowerCase() !== 'application/pdf') {
       return toast.warn('Only PDF file is supported!');
     }
+    if (file.name.search(' ') > 0) {
+      return toast.warn('The file name should not have a whitespace!');
+    }
     setPdfFile(file);
     setPdfFilePathOnIPFS(undefined);
   }
@@ -92,7 +95,11 @@ const HomePage = () => {
   const thumbnailRef = React.useRef<HTMLInputElement>(null);
 
   function handleThumbnailFile(files: File[]) {
-    setThumbnail(files[0]);
+    const file = files[0];
+    if (file.name.search(' ') > 0) {
+      return toast.warn('The file name should not have a whitespace!');
+    }
+    setThumbnail(file);
     setThumbnailPathOnIPFS(undefined);
   }
 
