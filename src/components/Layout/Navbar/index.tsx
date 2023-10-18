@@ -96,8 +96,6 @@ export const Navbar = () => {
             )
           ).data;
 
-          console.log('===========', user);
-
           dispatch({ type: 'LOAD_USER', payload: user });
 
           onAbort();

@@ -1,108 +1,249 @@
 import React, { useEffect, useState } from 'react';
 import { HashLink } from 'react-router-hash-link';
-import { useGetAccountInfo, useGetLastSignedMessageSession, useSignMessage } from 'hooks';
-import { useGetSignMessageSession } from '@multiversx/sdk-dapp/hooks/signMessage/useGetSignMessageSession';
-import { Address } from '@multiversx/sdk-core/out';
-import { SignableMessage } from '@multiversx/sdk-core';
-import { SignedMessageStatusesEnum } from 'types';
+import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
 import { scrollWithOffset } from 'data';
+import { CombinedReducer } from 'store';
+import { User } from 'interfaces/User';
+import { uploadMetadataToIPFS } from 'utils';
+import { mintingFee } from 'config';
 import { ReactComponent as CloseIcon } from 'assets/img/close.svg';
+import MintingNotificationModal from 'components/Home/MintingNotificationModal';
+import About from 'components/Home/About';
+import axios from 'axios';
 
 const HomePage = () => {
-  const { address } = useGetAccountInfo();
-  const { sessionId, signMessage, onAbort } = useSignMessage();
-  const signedMessageInfo = useGetLastSignedMessageSession();
-  const messageSession = useGetSignMessageSession(sessionId);
-
-  const [message, setMessage] = useState('How are you doing?');
-  const [thumbnail, setThumbnail] = useState();
+  const [thumbnail, setThumbnail] = useState<File | undefined>(undefined);
+  const [thumbnailPathOnIPFS, setThumbnailPathOnIPFS] = useState<string>();
   const [previewThumbnail, setPreviewThumbnail] = useState<string>();
-  const [activeCreateBtn, setActiveCreateBtn] = useState<boolean>(false);
-  const [dragActive, setDragActive] = useState<boolean>(false);
-  const [isValidThumbnail, setIsValidThumbnail] = useState<boolean>(false);
+  const [dragActiveThumbnail, setDragActiveThumbnail] = useState<boolean>(false);
+  const [pdfFile, setPdfFile] = useState<File | undefined>(undefined);
+  const [pdfFilePathOnIPFS, setPdfFilePathOnIPFS] = useState<string>();
+  const [previewPdfFileName, setPreviewPdfFileName] = useState<string>();
+  const [dragActivePdfFile, setDragActivePdfFile] = useState<boolean>(false);
+  const [tokenName, setTokenName] = useState<string>('');
+  const [datasetTitle, setDatasetTitle] = useState<string>('');
+  const [datasetDescription, setDatasetDescription] = useState<string>('');
+  const [royalties, setRoyalties] = useState<number | null>(10);
+  const [notificationMessage, setNotificationMessage] = useState<string>('Minting process..');
+  const [isMinting, setIsMinting] = useState<boolean>(false);
+  const [isSuccessful, setIsSuccessful] = useState<boolean>(false);
+  const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false);
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
+  const user = useSelector<CombinedReducer, User>((state) => state.user);
 
-    if (signedMessageInfo) {
-      onAbort();
+  const handleResetFile = (inputFileRef: any) => {
+    if (inputFileRef.current) {
+      inputFileRef.current.value = null;
     }
-
-    if (!message.trim()) {
-      return;
-    }
-
-    const sinableMessage = await signMessage({
-      message,
-      callbackRoute: window.location.href
-    });
-
-    console.log('sinableMessage', sinableMessage);
-    const string = new TextDecoder().decode(sinableMessage?.message);
-    console.log('string', string);
   };
 
-  useEffect(() => {
-    if (signedMessageInfo && signedMessageInfo.status == SignedMessageStatusesEnum.signed) {
-      console.log('signedMessageInfo', signedMessageInfo);
+  /* handle PDF input */
+  const pdfRef = React.useRef<HTMLInputElement>(null);
+
+  function handlePdfFile(files: File[]) {
+    const file = files[0];
+    console.log('file.type', file.type);
+    if (file.type.toLowerCase() !== 'application/pdf') {
+      return toast.warn('Only PDF file is supported!');
     }
-  }, [signedMessageInfo]);
-
-  /* handle file input */
-  const inputRef: any = React.useRef(null);
-
-  function handleFile(files: any) {
-    setThumbnail(files[0]);
+    setPdfFile(file);
+    setPdfFilePathOnIPFS(undefined);
   }
 
-  // handle drag events
-  const handleDrag = (e: any) => {
+  // handle drag events for PDF
+  const handleDragForPdf = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
+      setDragActivePdfFile(true);
     } else if (e.type === 'dragleave') {
-      setDragActive(false);
+      setDragActivePdfFile(false);
     }
   };
 
-  // triggers when file is dropped
-  const handleDrop = (e: any) => {
+  // triggers when file is dropped for PDF
+  const handleDropForPdf = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragActive(false);
+    setDragActivePdfFile(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files);
+      handlePdfFile(e.dataTransfer.files);
     }
   };
 
-  // triggers when file is selected with click
-  const handleChange = (e: any) => {
+  // triggers when PDF file is selected with click
+  const handleChangeForPdf = (e: any) => {
     e.preventDefault();
-    let isValid = false;
     if (e.target.files && e.target.files[0]) {
-      isValid = true;
-      setIsValidThumbnail(isValid);
-      handleFile(e.target.files);
+      handlePdfFile(e.target.files);
     }
   };
 
-  // triggers the input when the file input div is clicked
-  const onFileInputDivClick = () => {
-    inputRef.current.click();
+  // triggers the input when the PDF file input div is clicked
+  const onPdfFileInputDivClick = () => {
+    if (pdfRef?.current) {
+      pdfRef.current.click();
+    }
   };
   /* ----------------- */
+
+  /* handle thumbnail input */
+  const thumbnailRef = React.useRef<HTMLInputElement>(null);
+
+  function handleThumbnailFile(files: File[]) {
+    setThumbnail(files[0]);
+    setThumbnailPathOnIPFS(undefined);
+  }
+
+  // handle drag events for thumbnail
+  const handleDragForThumbnail = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActiveThumbnail(true);
+    } else if (e.type === 'dragleave') {
+      setDragActiveThumbnail(false);
+    }
+  };
+
+  // triggers when file is dropped for thumbnail
+  const handleDropForThumbnail = (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActiveThumbnail(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleThumbnailFile(e.dataTransfer.files);
+    }
+  };
+
+  // triggers when thumbnail file is selected with click
+  const handleChangeForThumbnail = (e: any) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      handleThumbnailFile(e.target.files);
+    }
+  };
+
+  // triggers the input when the thumbnail file input div is clicked
+  const onThumbnailFileInputDivClick = () => {
+    if (thumbnailRef?.current) {
+      thumbnailRef.current.click();
+    }
+  };
+  /* ----------------- */
+
+  const inputRoyalties = (input: string) => {
+    if (!input) return setRoyalties(null);
+
+    if (Number(input) >= 0) setRoyalties(Number(input));
+    else setRoyalties(0);
+  };
+
+  const handleMintDataNft = async () => {
+    if (!user?.address) {
+      return toast.warn('Please connect wallet or refresh browser!');
+    }
+
+    if (user?.usdcBalance < mintingFee) {
+      return toast.warn('Insufficient USDC balance!');
+    }
+
+    if (!tokenName) {
+      return toast.warn('Please input token name!');
+    }
+
+    if (!datasetTitle) {
+      return toast.warn('Please input dataset title!');
+    }
+
+    if (!datasetDescription) {
+      return toast.warn('Please input dataset description!');
+    }
+
+    if (!royalties || royalties < 0) {
+      return toast.warn('Invalid royalties!');
+    }
+
+    if (!pdfFile) {
+      return toast.warn('Please select PDF file!');
+    }
+
+    if (!thumbnail) {
+      return toast.warn('Please select thumbnail!');
+    }
+
+    try {
+      setIsMinting(true);
+      setShowNotificationModal(true);
+      let pdfFilePath = pdfFilePathOnIPFS;
+      if (!pdfFilePath) {
+        setNotificationMessage('Uploading PDF file..');
+        pdfFilePath = await uploadMetadataToIPFS(tokenName, datasetDescription, pdfFile);
+        setPdfFilePathOnIPFS(pdfFilePath);
+      }
+
+      let thumbnailPath = thumbnailPathOnIPFS;
+      if (!thumbnailPath) {
+        setNotificationMessage('Uploading thumbnail..');
+        thumbnailPath = await uploadMetadataToIPFS(tokenName, datasetDescription, thumbnail);
+        setThumbnailPathOnIPFS(thumbnailPath);
+      }
+
+      const data = {
+        tokenName,
+        datasetTitle,
+        datasetDescription,
+        royalties: royalties * 100,
+        pdfFilePath,
+        thumbnailPath,
+      };
+
+      setNotificationMessage('Minting NFT..');
+      await axios.post('/api/mintingData/mint', data);
+      setNotificationMessage('Minting is successful');
+      setIsMinting(false);
+      setIsSuccessful(true);
+
+      setPdfFilePathOnIPFS(undefined);
+      setThumbnailPathOnIPFS(undefined);
+    } catch (e) {
+      console.log('error in minting data nft', e);
+      if (axios.isAxiosError(e)) {
+        toast.error(e?.response?.data?.message?.toString(), { autoClose: 10000 });
+      } else {
+        toast.error('Failed to mint data NFT.');
+      }
+      setIsMinting(false);
+      setIsSuccessful(false);
+      setNotificationMessage('Failed to mint. Try again.');
+    }
+  };
+
+  useEffect(() => {
+    if (!showNotificationModal) {
+      setNotificationMessage('Minting process..');
+      setIsSuccessful(false);
+    }
+  }, [showNotificationModal]);
+
+  useEffect(() => {
+    if (!pdfFile) {
+      setPreviewPdfFileName(undefined);
+      return;
+    } else {
+      setPreviewPdfFileName(pdfFile.name);
+    }
+  }, [pdfFile]);
 
   useEffect(() => {
     if (!thumbnail) {
       setPreviewThumbnail(undefined);
-      setIsValidThumbnail(false);
       return;
     }
 
     const objectUrl = URL.createObjectURL(thumbnail);
     setPreviewThumbnail(objectUrl);
-    setIsValidThumbnail(true);
 
     return () => URL.revokeObjectURL(objectUrl);
   }, [thumbnail]);
@@ -186,8 +327,10 @@ const HomePage = () => {
                 <h6 className='text-[12px] font-inter font-medium leading-[16px]'>Enter token name</h6>
 
                 <input
+                  value={tokenName}
                   className='w-full rounded-[8px] bg-[#19191A] p-[12px] text-[16px] font-inter font-normal leading-[24px] mt-[12px] grey-placeholder border-none shadow-none focus:shadow-none outline-none'
                   placeholder='Token name'
+                  onChange={(e) => setTokenName(e?.target?.value)}
                 />
                 <h6 className='text-[11px] text-[#77777D] font-inter font-medium leading-[16px] ml-[12px] mt-[8px]'>Between 3 and 20 alphanumeric characters only</h6>
               </div>
@@ -197,8 +340,10 @@ const HomePage = () => {
                 <h6 className='text-[12px] font-inter font-medium leading-[16px]'>Enter dataset title</h6>
 
                 <input
+                  value={datasetTitle}
                   className='w-full rounded-[8px] bg-[#19191A] p-[12px] text-[16px] font-inter font-normal leading-[24px] mt-[12px] grey-placeholder border-none shadow-none focus:shadow-none outline-none'
                   placeholder='Dataset title'
+                  onChange={(e) => setDatasetTitle(e?.target?.value)}
                 />
                 <h6 className='text-[11px] text-[#77777D] font-inter font-medium leading-[16px] ml-[12px] mt-[8px]'>Between 10 and 60 alphanumeric characters only</h6>
               </div>
@@ -209,9 +354,11 @@ const HomePage = () => {
               <h6 className='text-[12px] font-inter font-medium leading-[16px]'>Enter dataset description</h6>
 
               <textarea
+                value={datasetDescription}
                 rows={5}
                 className='w-full rounded-[8px] bg-[#19191A] p-[12px] text-[16px] font-inter font-normal leading-[24px] mt-[12px] grey-placeholder border-none shadow-none focus:shadow-none outline-none'
                 placeholder='Dataset description'
+                onChange={(e) => setDatasetDescription(e?.target?.value)}
               />
               <h6 className='text-[11px] text-[#77777D] font-inter font-medium leading-[16px] ml-[12px] mt-[8px]'>Between 10 and 400 characters only. URL allowed.</h6>
             </div>
@@ -230,11 +377,14 @@ const HomePage = () => {
 
             <div className='flex items-center gap-[16px] mt-[12px]'>
               <input
+                value={royalties === null ? '' : royalties}
                 type='number'
                 className='bg-[#19191A] rounded-[8px] w-full max-w-[480px] text-[16px] font-inter font-normal leading-[24px] p-[12px] border-none shadow-none focus:shadow-none outline-none'
                 placeholder='0'
+                onChange={(e) => inputRoyalties(e?.target?.value)}
               />
             </div>
+            <h6 className='text-[11px] text-[#77777D] font-inter font-medium leading-[16px] ml-[12px] mt-[8px]'>Between 0 and 50</h6>
           </div>
 
           {/* PDF file */}
@@ -243,27 +393,46 @@ const HomePage = () => {
               PDF file
             </h6>
             <div className='flex items-center gap-[16px] w-full h-[160px] mt-[12px] cursor-pointer'>
+              {
+                previewPdfFileName && (
+                  <div className='h-full aspect-square relative'>
+                    <div className='flex justify-end absolute w-full h-full opacity-100 md:opacity-0 hover:opacity-100 transition-opacity duration-300 p-[10px]'>
+                      <button
+                        className='flex justify-center items-center w-[20px] h-[20px] rounded-full hover:bg-[#19191A]/60'
+                        onClick={() => {
+                          setPdfFile(undefined);
+                          setPreviewPdfFileName(undefined);
+                          handleResetFile(pdfRef);
+                        }}
+                      >
+                        <CloseIcon />
+                      </button>
+                    </div>
+                    <div className='flex justify-center items-center w-full h-full p-2 word-break text-center text-[#77777D] bg-[#020710]/20 border border-dashed border-[#28282A] rounded-[12px]'>{previewPdfFileName}</div>
+                  </div>
+                )
+              }
               <div
                 className='flex flex-col justify-center items-center gap-[8px] w-full h-full bg-[#020710]/20 backdrop-blur-[4.5px] border border-dashed border-[#28282A] rounded-[12px]'
-                onClick={onFileInputDivClick}
-                onDragEnter={handleDrag}
+                onClick={onPdfFileInputDivClick}
+                onDragEnter={handleDragForPdf}
               >
-                <input ref={inputRef} type="file" onChange={handleChange} className='hidden' />
+                <input ref={pdfRef} type='file' onChange={handleChangeForPdf} className='hidden' />
                 <h4 className='text-[16px] font-inter font-semibold leading-[24px] px-[20px]'>
                   <span>{'Drag & drop PDF here or '}</span>
                   <span className='text-[#CAFC01]'>Select in files</span>
                 </h4>
                 <h6 className='w-[218px] text-[11px] text-[#676767] text-center font-inter font-normal leading-[16px]'>
-                  Supported formates: PDF.
+                  Supported format: PDF.
                 </h6>
 
                 {
-                  dragActive && (
+                  dragActivePdfFile && (
                     <div
-                      onDragEnter={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDragOver={handleDrag}
-                      onDrop={handleDrop}
+                      onDragEnter={handleDragForPdf}
+                      onDragLeave={handleDragForPdf}
+                      onDragOver={handleDragForPdf}
+                      onDrop={handleDropForPdf}
                       className='absolute w-full h-full inset-0'
                     />
                   )
@@ -275,19 +444,19 @@ const HomePage = () => {
           {/* Thumbnail */}
           <div className='w-full mt-[32px]'>
             <h6 className='text-[12px] font-inter font-medium leading-[16px]'>
-              Cover image
+              Thumbnail
             </h6>
             <div className='flex items-center gap-[16px] w-full h-[160px] mt-[12px] cursor-pointer'>
               {
                 previewThumbnail && (
                   <div className='h-full aspect-square relative'>
-                    <div className='flex justify-end absolute w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-300 p-[10px]'>
+                    <div className='flex justify-end absolute w-full h-full opacity-100 md:opacity-0 hover:opacity-100 transition-opacity duration-300 p-[10px]'>
                       <button
                         className='flex justify-center items-center w-[20px] h-[20px] rounded-full hover:bg-[#19191A]/60'
                         onClick={() => {
                           setThumbnail(undefined);
                           setPreviewThumbnail(undefined);
-                          setActiveCreateBtn(false);
+                          handleResetFile(thumbnailRef);
                         }}
                       >
                         <CloseIcon />
@@ -300,25 +469,25 @@ const HomePage = () => {
 
               <div
                 className='flex flex-col justify-center items-center gap-[8px] w-full h-full bg-[#020710]/20 backdrop-blur-[4.5px] border border-dashed border-[#28282A] rounded-[12px]'
-                onClick={onFileInputDivClick}
-                onDragEnter={handleDrag}
+                onClick={onThumbnailFileInputDivClick}
+                onDragEnter={handleDragForThumbnail}
               >
-                <input ref={inputRef} type="file" onChange={handleChange} className='hidden' />
+                <input ref={thumbnailRef} type='file' onChange={handleChangeForThumbnail} className='hidden' />
                 <h4 className='text-[16px] font-inter font-semibold leading-[24px] px-[20px]'>
                   <span>{'Drag & drop image here or '}</span>
                   <span className='text-[#CAFC01]'>Select in files</span>
                 </h4>
                 <h6 className='w-[218px] text-[11px] text-[#676767] text-center font-inter font-normal leading-[16px]'>
-                  Supported formates: JPEG, JPG and PNG. Recommended 640x640 image.
+                  Recommended formates: JPEG, JPG and PNG. Recommended 640x640 image.
                 </h6>
 
                 {
-                  dragActive && (
+                  dragActiveThumbnail && (
                     <div
-                      onDragEnter={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDragOver={handleDrag}
-                      onDrop={handleDrop}
+                      onDragEnter={handleDragForThumbnail}
+                      onDragLeave={handleDragForThumbnail}
+                      onDragOver={handleDragForThumbnail}
+                      onDrop={handleDropForThumbnail}
                       className='absolute w-full h-full inset-0'
                     />
                   )
@@ -332,7 +501,7 @@ const HomePage = () => {
           <div className='flex justify-end items-center w-full mt-[24px]'>
             <button
               className='text-[14px] md:text-[15px] text-[#0C0C0C] font-zendots font-semibold bg-[#CAFC01] shadow-[0px_4px_14px_0px_rgba(202,252,1,0.74)] rounded-full p-[8px_12px] md:p-[12px_22px] transition-all hover:translate-y-[-2px]'
-              onClick={handleSubmit}
+              onClick={handleMintDataNft}
             >
               Mint Your Data NFT
             </button>
@@ -340,292 +509,15 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* What is PDFNFT.com? */}
-      <div id='about' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          What is PDFNFT.com?
-        </h1>
+      <About />
 
-        <div className='flex flex-col gap-[10px] text-[18px] md:text-[20px] text-center'>
-          <p>PDFNFT.com is a game-changing platform that empowers you to convert your PDF documents into secure and monetizable Non-Fungible Tokens (NFTs). Whether you're an aspiring author, a legal eagle, or someone who wants to safeguard precious documents, we've got you covered!</p>
-        </div>
-      </div>
-
-      {/* How Does It Work?  */}
-      <div id='' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          How Does It Work?
-        </h1>
-
-        <div className='w-full flex flex-col gap-[10px] text-[18px] md:text-[20px] mt-[20px]'>
-          {/* Step 1 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Upload Your PDF:</span> Choose the PDF you wish to immortalize as an NFT.
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Upload Your Cover:</span> Add a snazzy cover image for your document.
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Pay a Fee:</span> A nominal $50 fee ensures your document's secure and everlasting storage.
-            </div>
-          </div>
-
-          {/* Step 4 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Watch the Magic Happen:</span> Your document is uploaded to the cloud and Interplanetary File System, with a 99-year redundant storage guarantee.
-            </div>
-          </div>
-
-          {/* Step 5 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Start Promoting:</span> You'll get a link to your document on the Itheum data marketplace, where you can start making a name for yourself!
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Why Choose PDFNFT.com? */}
-      <div id='' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          Why Choose PDFNFT.com?
-        </h1>
-
-        <div className='w-full flex flex-col gap-[10px] text-[18px] md:text-[20px] mt-[20px]'>
-          {/* 1 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Permanent Storage:</span> Your document enjoys a 99-year lifespan on the cloud and IPFS.
-            </div>
-          </div>
-
-          {/* 2 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Monetization:</span> Turn your creations into a revenue stream on the Itheum data marketplace.
-            </div>
-          </div>
-
-          {/* 3 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Authenticity:</span> Blockchain tech verifies your document's authenticity and ownership.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Real-World Applications */}
-      <div id='' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          Real-World Applications
-        </h1>
-
-        <div className='w-full flex flex-col gap-[10px] text-[18px] md:text-[20px] mt-[20px]'>
-          {/* 1 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>For Self-Publishing Authors:</span> Publish your masterpiece without a middleman and keep all the profits!
-            </div>
-          </div>
-
-          {/* 2 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>For Legal Professionals:</span> Securely store contracts and legal documents, with immutable proof of terms.
-            </div>
-          </div>
-
-          {/* 3 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>For Personal Use:</span> Keep life's important documents, like birth certificates and marriage licenses, safe and sound.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* The Old Way vs. The PDFNFT.com Way */}
-      <div id='' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          The Old Way vs. The PDFNFT.com Way
-        </h1>
-
-        <div className='w-full flex flex-col gap-[10px] text-[18px] md:text-[20px] mt-[20px]'>
-          {/* 1 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Ownership:</span> Traditional platforms like Amazon offer you a license, not ownership. We offer you indisputable ownership rights.
-            </div>
-          </div>
-
-          {/* 2 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Author Autonomy:</span> Gain full control over pricing, updates, and distribution.
-            </div>
-          </div>
-
-          {/* 3 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Security:</span> Say goodbye to piracy risks and hello to blockchain-verified security.
-            </div>
-          </div>
-
-          {/* 4 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Costs and Time:</span> Skip the high costs and long waits of traditional publishing. Go live in a minute!
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Ready to Take the Next Step? */}
-      <div id='about' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          Ready to Take the Next Step?
-        </h1>
-
-        <div className='flex flex-col gap-[10px] text-[18px] md:text-[20px] text-center'>
-          <p>Join PDFNFT.com today and be a part of the future of document storage and monetization.</p>
-        </div>
-      </div>
-
-      {/* The Limitations of Traditional E-Book Platforms like Amazon */}
-      <div id='' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          The Limitations of Traditional E-Book Platforms like Amazon
-        </h1>
-
-        <div className='w-full flex flex-col gap-[10px] text-[18px] md:text-[20px] mt-[20px] px-[50px]'>
-          {/* 1 */}
-          <div className='flex items-start gap-[20px]'>
-            <span className='font-bold'>1.</span>
-            <div>
-              Ownership Constraints: Purchasing an e-book from conventional platforms like Amazon doesn't grant you full ownership. You're essentially acquiring a license that could be revoked at any time.
-            </div>
-          </div>
-
-          {/* 2 */}
-          <div className='flex items-start gap-[20px]'>
-            <span className='font-bold'>2.</span>
-            <div>
-              Restricted Author Autonomy: Authors who publish through these platforms often find themselves with limited control over key aspects like pricing, updates, and distribution channels.
-            </div>
-          </div>
-
-          {/* 3 */}
-          <div className='flex items-start gap-[20px]'>
-            <span className='font-bold'>3.</span>
-            <div>
-              Vulnerability to Piracy: The traditional e-book format is susceptible to unauthorized copying and sharing, posing a significant risk to an author's potential earnings.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* The Financial Barriers of Conventional Self-Publishing */}
-      <div id='' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          The Financial Barriers of Conventional Self-Publishing
-        </h1>
-
-        <div className='w-full flex flex-col gap-[10px] text-[18px] md:text-[20px] mt-[20px] px-[50px]'>
-          {/* 1 */}
-          <div className='flex items-start gap-[20px]'>
-            <span className='font-bold'>1.</span>
-            <div>
-              1.	Upfront Expenses: Costs for ISBN registration, cover design, and formatting can quickly accumulate when using traditional self-publishing services.
-            </div>
-          </div>
-
-          {/* 2 */}
-          <div className='flex items-start gap-[20px]'>
-            <span className='font-bold'>2.</span>
-            <div>
-              2.	Recurring Commissions: These platforms often take a sizable cut from each sale, diminishing the author's overall profit margin.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Sole Responsibility for Marketing */}
-      <div id='about' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          Sole Responsibility for Marketing
-        </h1>
-
-        <div className='flex flex-col gap-[10px] text-[18px] md:text-[20px] text-center'>
-          <p>Authors are left to their own devices when it comes to promoting their work, which can be both costly and time-consuming.</p>
-        </div>
-      </div>
-
-      {/* Time-Consuming Process */}
-      <div id='about' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          Time-Consuming Process
-        </h1>
-
-        <div className='flex flex-col gap-[10px] text-[18px] md:text-[20px] text-center'>
-          <p>Traditional publishing can take weeks or even months to get your e-book live, delaying your entry into the market.</p>
-        </div>
-      </div>
-
-      {/* Empowering Authors with Data NFTs */}
-      <div id='' className='flex flex-col justify-center gap-[20px] w-full max-w-[1020px] px-[20px] mt-[60px] md:mt-[100px] mb-[50px]'>
-        <h1 className='text-[32px] md:text-[40px] text-center font-worksans-black leading-[1]'>
-          Empowering Authors with Data NFTs
-        </h1>
-
-        <div className='w-full flex flex-col gap-[10px] text-[18px] md:text-[20px] mt-[20px]'>
-          {/* 1 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Unambiguous Ownership:</span> Converting your e-book into a Data NFT on PDFNFT.com provides indisputable, blockchain-verified ownership rights.
-            </div>
-          </div>
-
-          {/* 2 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Customizable Copy Limits:</span> Data NFTs allow you to specify the maximum number of copies that can be made, offering a built-in solution to unauthorized distribution.
-            </div>
-          </div>
-
-          {/* 3 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Direct Monetization:</span> The Itheum data marketplace enables you to set your own pricing strategy, giving you full control over how you monetize your work.
-            </div>
-          </div>
-
-          {/* 4 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Enhanced Security:</span> Blockchain technology ensures that each e-book copy is distinct and fully traceable, significantly mitigating the risk of piracy.
-            </div>
-          </div>
-
-          {/* 5 */}
-          <div className='flex items-start gap-[10px]'>
-            <div>
-              <span className='font-bold'>Swift Publishing:</span> With PDFNFT.com, your e-book can be live in as little as a minute, allowing you to focus more on promotion and less on the publishing process.
-            </div>
-          </div>
-        </div>
-      </div>
+      <MintingNotificationModal
+        show={showNotificationModal}
+        isMinting={isMinting}
+        isSuccessful={isSuccessful}
+        notificationMessage={notificationMessage}
+        handleShow={setShowNotificationModal}
+      />
     </div>
   );
 };

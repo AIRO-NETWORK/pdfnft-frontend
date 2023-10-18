@@ -26,7 +26,14 @@ export const explorers: { [k: string]: string } = {
     'devnet': 'https://devnet-explorer.multiversx.com'
 };
 
+export const dataDexUrls: { [k: string]: string } = {
+    'mainnet': 'https://datadex.itheum.io',
+    'devnet': 'https://test.datadex.itheum.io'
+};
+
 export const usdcTokenIds: { [k: string]: string } = {
     'mainnet': 'USDC-c76f1f',
     'devnet': 'USDC-787051'
 };
+
+export const mintingFee = 50;

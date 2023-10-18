@@ -98,7 +98,7 @@ const FundModal = (props: IProps) => {
             value: 0,
             data: data.toString(),
             receiver: serverWallet,
-            gasLimit: 100000000
+            gasLimit: 3000000
         };
 
         const sessionId = await callMethod({ tx: tx });
