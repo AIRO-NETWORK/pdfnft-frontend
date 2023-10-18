@@ -20,6 +20,7 @@ import { Sockets } from 'reducers/sockets';
 import FundModal from './FundModal';
 import logoImg from 'assets/img/logo.png';
 import pencilImg from 'assets/img/pencil.svg';
+import { delay } from 'utils';
 
 let flag = false;
 let isSigningMessage = false;
@@ -143,6 +144,13 @@ export const Navbar = () => {
           if (signedMessageInfo) {
             onAbort();
           }
+
+          // await signMessage({
+          //   message: messageToSign,
+          //   callbackRoute: window.location.href
+          // });
+
+          await delay(3500);
 
           await signMessage({
             message: messageToSign,

@@ -55,3 +55,7 @@ export const uploadMetadataToIPFS = async (
         return;
     }
 };
+
+export const delay = async (ms: number) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
