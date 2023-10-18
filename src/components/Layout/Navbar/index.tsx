@@ -145,11 +145,6 @@ export const Navbar = () => {
             onAbort();
           }
 
-          // await signMessage({
-          //   message: messageToSign,
-          //   callbackRoute: window.location.href
-          // });
-
           await delay(3500);
 
           await signMessage({
