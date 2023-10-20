@@ -40,7 +40,7 @@ The PDFNFT Dapp leverages blockchain technology in several key ways:
 
 - **Smart Contracts**: The Dapp interacts with smart contracts on the MultiversX blockchain to create, manage, and transfer PDFNFTs. These contracts ensure the security and authenticity of NFTs.
 
-- **Wallet Integration**: Users can connect their Ethereum wallets to the Dapp to manage their PDFNFTs and perform transactions securely.
+- **Wallet Integration**: Users can connect their MultiversX wallets to the Dapp to manage their PDFNFTs and perform transactions securely.
 
 - **Decentralization**: The blockchain ensures the decentralization of NFT ownership and transactions, providing users with full control over their assets.
 
